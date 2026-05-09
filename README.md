@@ -45,10 +45,13 @@ Alternativ kann ein Projektpfad übergeben werden:
 ./agent-sandbox.sh /pfad/zum/projekt
 ```
 
-Im Container ist `/workspace` das Arbeitsverzeichnis und gleichzeitig das
-Home-Verzeichnis (`HOME=/workspace`).
+Im Container ist `/workspace` das Arbeitsverzeichnis. Das Home-Verzeichnis der
+Agenten liegt separat unter `/tmp/agent-home`, damit Shell-Historie, XDG-Cache,
+npm-State und Agent-Dateien nicht im Projektroot entstehen.
 Der Container läuft mit der UID/GID des aufrufenden Host-Users, damit im
-Projekt erzeugte Dateien nicht root gehören.
+Projekt erzeugte Dateien nicht root gehören. Beim Start werden temporäre
+`/etc/passwd`- und `/etc/group`-Dateien gemountet, damit diese UID im Container
+auch einen Namen hat.
 
 ### Skript ins PATH legen
 
@@ -88,18 +91,23 @@ docker ps
 | Host | Container | Beschreibung |
 |------|-----------|--------------|
 | aktuelles Verzeichnis oder Argument | `/workspace` | Projektdateien |
-| `~/.gitconfig` | `/workspace/.gitconfig` | Git-Konfiguration, read-only |
-| `~/.claude` | `/workspace/.claude` | Claude-Konfiguration |
-| `~/.codex` | `/workspace/.codex` | Codex-Konfiguration |
-| `~/.agents` | `/workspace/.agents` | Agent-Konfiguration und Skills |
-| `~/.copilot` | `/workspace/.copilot` | GitHub-Copilot-Konfiguration |
-| `~/.cursor` | `/workspace/.cursor` | Cursor-Konfiguration |
+| `~/.gitconfig` | `/tmp/host.gitconfig` | Git-Konfiguration, read-only |
+| `~/.claude` | `/tmp/agent-home/.claude` | Claude-Konfiguration |
+| `~/.codex` | `/tmp/agent-home/.codex` | Codex-Konfiguration |
+| `~/.agents` | `/tmp/agent-home/.agents` | Agent-Konfiguration und Skills |
+| `~/.copilot` | `/tmp/agent-home/.copilot` | GitHub-Copilot-Konfiguration |
+| `~/.cursor` | `/tmp/agent-home/.cursor` | Cursor-Konfiguration |
 
 ## Hinweise
 
 - Der Container wird mit `--rm` gestartet und nach `exit` automatisch entfernt.
 - Der Containername ist `agent-sandbox`.
 - Der Claude-Autoupdater ist deaktiviert (`CLAUDE_SKIP_AUTOUPDATER=1`).
+- `HOME`, `HISTFILE` und die XDG-Verzeichnisse zeigen auf `/tmp/agent-home`.
+  Dadurch landen `.bash_history`, `.cache`, `.local`, `.npm` und
+  Claude-Home-Dateien nicht mehr in `/workspace`.
+- `/tmp/agent-home` ist ein `tmpfs` mit `exec`, damit Tools wie Copilot native
+  Module aus ihrem Cache laden können.
 - npm-Cache und npm-Logs liegen im Container unter `/tmp`, damit Agent-CLIs
   keine npm-Logdateien im gemounteten Projektverzeichnis erzeugen.
 - Die Agent-CLIs starten im YOLO-Modus:

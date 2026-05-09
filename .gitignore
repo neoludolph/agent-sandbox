@@ -29,10 +29,14 @@ $RECYCLE.BIN/
 
 # Local agent/tool configuration
 .claude/
+.claude.json
+claude.json
 .codex/
 .agents/
 .copilot/
 .cursor/
+.bash_history
+.local/
 
 # Environment and local overrides
 .env
