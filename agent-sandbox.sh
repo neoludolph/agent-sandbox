@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-CONTAINER_NAME=agent-sandbox
+CONTAINER_NAME="agent-sandbox-$$"
 WORKSPACE_DIR="${1:-$(pwd)}"
 HOST_AGENT_HOME="$HOME/.agent-sandbox/home"
 HOST_UID="$(id -u)"
@@ -44,7 +44,7 @@ docker run -it \
     --user "$HOST_UID:$HOST_GID" \
     -e CLAUDE_SKIP_AUTOUPDATER=1 \
     -e GIT_CONFIG_GLOBAL=/tmp/host.gitconfig \
-    -e HISTFILE="$AGENT_HOME/.bash_history" \
+    -e HISTFILE="$AGENT_HOME/.bash_history.$$" \
     -e HOME="$AGENT_HOME" \
     -e LOGNAME="$HOST_USER" \
     -e NPM_CONFIG_CACHE=/tmp/npm-cache \
