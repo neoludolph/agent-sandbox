@@ -47,6 +47,8 @@ Alternativ kann ein Projektpfad übergeben werden:
 
 Im Container ist `/workspace` das Arbeitsverzeichnis und gleichzeitig das
 Home-Verzeichnis (`HOME=/workspace`).
+Der Container läuft mit der UID/GID des aufrufenden Host-Users, damit im
+Projekt erzeugte Dateien nicht root gehören.
 
 ### Skript ins PATH legen
 

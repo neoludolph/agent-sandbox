@@ -16,10 +16,13 @@ mkdir -p "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR"
 
 docker run -it \
     --rm \
+    --user "$(id -u):$(id -g)" \
     -e CLAUDE_SKIP_AUTOUPDATER=1 \
     -e GIT_CONFIG_GLOBAL=/tmp/host.gitconfig \
     -e HOME=/workspace \
+    -e LOGNAME="$(id -un)" \
     -e TZ="Europe/Berlin" \
+    -e USER="$(id -un)" \
     -v "$WORKSPACE_DIR":/workspace \
     -v "$GITCONFIG":/tmp/host.gitconfig:ro \
     -v "$CLAUDE_DIR":/workspace/.claude \

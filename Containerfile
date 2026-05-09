@@ -24,7 +24,7 @@ RUN bash -c 'curl -fsSL "https://get.sdkman.io?rcupdate=false" | bash \
 
 ENV JAVA_HOME=${SDKMAN_DIR}/candidates/java/current
 ENV MAVEN_HOME=${SDKMAN_DIR}/candidates/maven/current
-ENV PATH=/root/.local/bin:${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${PATH}
+ENV PATH=${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${PATH}
 
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
@@ -34,7 +34,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
       @openai/codex \
       @github/copilot
 
-RUN bash -o pipefail -c 'curl https://cursor.com/install -fsS | bash'
+RUN mkdir -p /opt/cursor-agent \
+ && HOME=/opt/cursor-agent bash -o pipefail -c 'curl https://cursor.com/install -fsS | bash' \
+ && for bin in /opt/cursor-agent/.local/bin/*; do \
+      ln -sf "$bin" "/usr/local/bin/$(basename "$bin")"; \
+    done
 
 RUN echo 'source "${SDKMAN_DIR}/bin/sdkman-init.sh"' >> /etc/bash.bashrc
 
