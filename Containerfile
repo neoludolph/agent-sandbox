@@ -12,9 +12,6 @@ RUN apt-get update \
       ca-certificates \
       curl \
       git \
-      alsa-utils \
-      libpulse0 \
-      pulseaudio-utils \
       unzip \
       zip \
  && rm -rf /var/lib/apt/lists/*
@@ -28,7 +25,6 @@ RUN bash -c 'curl -fsSL "https://get.sdkman.io?rcupdate=false" | bash \
 ENV JAVA_HOME=${SDKMAN_DIR}/candidates/java/current
 ENV MAVEN_HOME=${SDKMAN_DIR}/candidates/maven/current
 ENV PATH=${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${PATH}
-ENV JAVA_TOOL_OPTIONS="-Djavax.net.ssl.trustStore=/etc/ssl/java/cacerts -Djavax.net.ssl.trustStorePassword=changeit"
 
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \

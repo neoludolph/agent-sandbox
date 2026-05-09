@@ -1,1 +1,89 @@
-.idea
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux / desktop files
+*~
+.fuse_hidden*
+.directory
+.Trash-*/
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.tmp
+*.bak
+*.orig
+
+# Local agent/tool configuration
+.claude/
+.codex/
+.agents/
+.copilot/
+.cursor/
+
+# Environment and local overrides
+.env
+.env.*
+!.env.example
+*.local
+*.local.*
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Node.js artifacts
+node_modules/
+dist/
+build/
+coverage/
+.npm/
+.pnpm-store/
+
+# Java / Maven / Gradle artifacts
+target/
+.m2/
+.gradle/
+out/
+*.class
+*.jar
+*.war
+*.ear
+
+# Docker / container scratch files
+*.tar
+*.tar.gz
+*.tgz
+*.img
+
+# Certificates and secrets
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+javacerts/
+java.certs/
+
+# Temporary directories
+tmp/
+temp/
+.cache/
