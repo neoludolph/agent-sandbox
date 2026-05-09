@@ -102,4 +102,9 @@ docker ps
 - Der Claude-Autoupdater ist deaktiviert (`CLAUDE_SKIP_AUTOUPDATER=1`).
 - npm-Cache und npm-Logs liegen im Container unter `/tmp`, damit Agent-CLIs
   keine npm-Logdateien im gemounteten Projektverzeichnis erzeugen.
+- Die Agent-CLIs starten im YOLO-Modus:
+  `claude --dangerously-skip-permissions`,
+  `codex --dangerously-bypass-approvals-and-sandbox`,
+  `copilot --yolo` und
+  `cursor-agent`/`agent --yolo --sandbox disabled --approve-mcps`.
 - Die Zeitzone ist auf `Europe/Berlin` gesetzt.
