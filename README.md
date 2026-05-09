@@ -18,9 +18,10 @@ Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js und Agent-CLIs.
 - Docker
 - `~/.gitconfig`
 
-Die Konfigurationsverzeichnisse `~/.claude`, `~/.codex`, `~/.agents`,
-`~/.copilot` und `~/.cursor` werden beim Start automatisch angelegt, falls sie
-noch nicht existieren.
+Das persistente Container-Home `~/.agent-sandbox/home` und die
+Konfigurationsverzeichnisse `~/.claude`, `~/.codex`, `~/.agents`, `~/.copilot`
+und `~/.cursor` werden beim Start automatisch angelegt, falls sie noch nicht
+existieren.
 
 ## Container bauen
 
@@ -46,8 +47,10 @@ Alternativ kann ein Projektpfad übergeben werden:
 ```
 
 Im Container ist `/workspace` das Arbeitsverzeichnis. Das Home-Verzeichnis der
-Agenten liegt separat unter `/tmp/agent-home`, damit Shell-Historie, XDG-Cache,
-npm-State und Agent-Dateien nicht im Projektroot entstehen.
+Agenten liegt separat unter `/tmp/agent-home` und wird auf dem Host unter
+`~/.agent-sandbox/home` gespeichert, damit Shell-Historie, XDG-State,
+Authentifizierung und Agent-Dateien erhalten bleiben, aber nicht im Projektroot
+entstehen.
 Der Container läuft mit der UID/GID des aufrufenden Host-Users, damit im
 Projekt erzeugte Dateien nicht root gehören. Beim Start werden temporäre
 `/etc/passwd`- und `/etc/group`-Dateien gemountet, damit diese UID im Container
@@ -91,6 +94,7 @@ docker ps
 | Host | Container | Beschreibung |
 |------|-----------|--------------|
 | aktuelles Verzeichnis oder Argument | `/workspace` | Projektdateien |
+| `~/.agent-sandbox/home` | `/tmp/agent-home` | Persistentes Container-Home |
 | `~/.gitconfig` | `/tmp/host.gitconfig` | Git-Konfiguration, read-only |
 | `~/.claude` | `/tmp/agent-home/.claude` | Claude-Konfiguration |
 | `~/.codex` | `/tmp/agent-home/.codex` | Codex-Konfiguration |
@@ -105,9 +109,8 @@ docker ps
 - Der Claude-Autoupdater ist deaktiviert (`CLAUDE_SKIP_AUTOUPDATER=1`).
 - `HOME`, `HISTFILE` und die XDG-Verzeichnisse zeigen auf `/tmp/agent-home`.
   Dadurch landen `.bash_history`, `.cache`, `.local`, `.npm` und
-  Claude-Home-Dateien nicht mehr in `/workspace`.
-- `/tmp/agent-home` ist ein `tmpfs` mit `exec`, damit Tools wie Copilot native
-  Module aus ihrem Cache laden können.
+  Claude-Home-Dateien nicht mehr in `/workspace`, bleiben aber unter
+  `~/.agent-sandbox/home` erhalten.
 - npm-Cache und npm-Logs liegen im Container unter `/tmp`, damit Agent-CLIs
   keine npm-Logdateien im gemounteten Projektverzeichnis erzeugen.
 - Die Agent-CLIs starten im YOLO-Modus:

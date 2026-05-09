@@ -4,6 +4,7 @@ set -euo pipefail
 CONTAINER_NAME=agent-sandbox
 WORKSPACE_DIR="${1:-$(pwd)}"
 AGENT_HOME=/tmp/agent-home
+HOST_AGENT_HOME="$HOME/.agent-sandbox/home"
 HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
 HOST_USER="$(id -un)"
@@ -17,7 +18,7 @@ COPILOT_DIR="$HOME/.copilot"
 CURSOR_DIR="$HOME/.cursor"
 
 [ -f "$GITCONFIG" ] || { echo "Datei $GITCONFIG nicht vorhanden"; exit 1; }
-mkdir -p "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR"
+mkdir -p "$HOST_AGENT_HOME" "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR"
 
 PASSWD_FILE="$(mktemp)"
 GROUP_FILE="$(mktemp)"
@@ -59,7 +60,7 @@ docker run -it \
     -v "$PASSWD_FILE":/etc/passwd:ro \
     -v "$GROUP_FILE":/etc/group:ro \
     -v "$GITCONFIG":/tmp/host.gitconfig:ro \
-    --tmpfs "$AGENT_HOME:exec,mode=1777" \
+    -v "$HOST_AGENT_HOME":"$AGENT_HOME" \
     -v "$CLAUDE_DIR":"$AGENT_HOME/.claude" \
     -v "$CODEX_DIR":"$AGENT_HOME/.codex" \
     -v "$AGENTS_DIR":"$AGENT_HOME/.agents" \
