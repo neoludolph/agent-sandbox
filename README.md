@@ -100,4 +100,6 @@ docker ps
 - Der Container wird mit `--rm` gestartet und nach `exit` automatisch entfernt.
 - Der Containername ist `agent-sandbox`.
 - Der Claude-Autoupdater ist deaktiviert (`CLAUDE_SKIP_AUTOUPDATER=1`).
+- npm-Cache und npm-Logs liegen im Container unter `/tmp`, damit Agent-CLIs
+  keine npm-Logdateien im gemounteten Projektverzeichnis erzeugen.
 - Die Zeitzone ist auf `Europe/Berlin` gesetzt.

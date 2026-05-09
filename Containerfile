@@ -51,4 +51,5 @@ RUN java -version \
  && cursor-agent --version \
  && copilot --version
 
+ENTRYPOINT []
 CMD ["/bin/bash"]

@@ -16,11 +16,14 @@ mkdir -p "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR"
 
 docker run -it \
     --rm \
+    --entrypoint "" \
     --user "$(id -u):$(id -g)" \
     -e CLAUDE_SKIP_AUTOUPDATER=1 \
     -e GIT_CONFIG_GLOBAL=/tmp/host.gitconfig \
     -e HOME=/workspace \
     -e LOGNAME="$(id -un)" \
+    -e NPM_CONFIG_CACHE=/tmp/npm-cache \
+    -e NPM_CONFIG_LOGS_DIR=/tmp/npm-logs \
     -e TZ="Europe/Berlin" \
     -e USER="$(id -un)" \
     -v "$WORKSPACE_DIR":/workspace \
