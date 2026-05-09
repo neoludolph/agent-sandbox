@@ -3,12 +3,12 @@ set -euo pipefail
 
 CONTAINER_NAME=agent-sandbox
 WORKSPACE_DIR="${1:-$(pwd)}"
-AGENT_HOME=/tmp/agent-home
 HOST_AGENT_HOME="$HOME/.agent-sandbox/home"
 HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
 HOST_USER="$(id -un)"
 HOST_GROUP="$(id -gn)"
+AGENT_HOME="/home/$HOST_USER"
 
 GITCONFIG="$HOME/.gitconfig"
 CLAUDE_DIR="$HOME/.claude"

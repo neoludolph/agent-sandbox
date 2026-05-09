@@ -47,7 +47,7 @@ Alternativ kann ein Projektpfad übergeben werden:
 ```
 
 Im Container ist `/workspace` das Arbeitsverzeichnis. Das Home-Verzeichnis der
-Agenten liegt separat unter `/tmp/agent-home` und wird auf dem Host unter
+Agenten liegt separat unter `/home/<user>` und wird auf dem Host unter
 `~/.agent-sandbox/home` gespeichert, damit Shell-Historie, XDG-State,
 Authentifizierung und Agent-Dateien erhalten bleiben, aber nicht im Projektroot
 entstehen.
@@ -94,23 +94,25 @@ docker ps
 | Host | Container | Beschreibung |
 |------|-----------|--------------|
 | aktuelles Verzeichnis oder Argument | `/workspace` | Projektdateien |
-| `~/.agent-sandbox/home` | `/tmp/agent-home` | Persistentes Container-Home |
+| `~/.agent-sandbox/home` | `/home/<user>` | Persistentes Container-Home |
 | `~/.gitconfig` | `/tmp/host.gitconfig` | Git-Konfiguration, read-only |
-| `~/.claude` | `/tmp/agent-home/.claude` | Claude-Konfiguration |
-| `~/.codex` | `/tmp/agent-home/.codex` | Codex-Konfiguration |
-| `~/.agents` | `/tmp/agent-home/.agents` | Agent-Konfiguration und Skills |
-| `~/.copilot` | `/tmp/agent-home/.copilot` | GitHub-Copilot-Konfiguration |
-| `~/.cursor` | `/tmp/agent-home/.cursor` | Cursor-Konfiguration |
+| `~/.claude` | `/home/<user>/.claude` | Claude-Konfiguration |
+| `~/.codex` | `/home/<user>/.codex` | Codex-Konfiguration |
+| `~/.agents` | `/home/<user>/.agents` | Agent-Konfiguration und Skills |
+| `~/.copilot` | `/home/<user>/.copilot` | GitHub-Copilot-Konfiguration |
+| `~/.cursor` | `/home/<user>/.cursor` | Cursor-Konfiguration |
 
 ## Hinweise
 
 - Der Container wird mit `--rm` gestartet und nach `exit` automatisch entfernt.
 - Der Containername ist `agent-sandbox`.
 - Der Claude-Autoupdater ist deaktiviert (`CLAUDE_SKIP_AUTOUPDATER=1`).
-- `HOME`, `HISTFILE` und die XDG-Verzeichnisse zeigen auf `/tmp/agent-home`.
+- `HOME`, `HISTFILE` und die XDG-Verzeichnisse zeigen auf `/home/<user>`.
   Dadurch landen `.bash_history`, `.cache`, `.local`, `.npm` und
   Claude-Home-Dateien nicht mehr in `/workspace`, bleiben aber unter
   `~/.agent-sandbox/home` erhalten.
+- Das Container-Home liegt bewusst nicht unter `/tmp`, weil Codex CLI dort
+  keine Helper-Binaries anlegen will.
 - npm-Cache und npm-Logs liegen im Container unter `/tmp`, damit Agent-CLIs
   keine npm-Logdateien im gemounteten Projektverzeichnis erzeugen.
 - Die Agent-CLIs starten im YOLO-Modus:
