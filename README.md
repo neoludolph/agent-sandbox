@@ -1,14 +1,17 @@
 # agent-sandbox
 
-Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js und Claude Code CLI.
+Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js und Agent-CLIs.
 
 ## Enthalten
 
 - Debian 12 Slim
 - Java (Amazon Corretto 25) via SDKMAN
 - Maven 3.9.9 via SDKMAN
-- Node.js 20
+- Node.js 22
 - Claude Code CLI (`@anthropic-ai/claude-code`)
+- OpenAI Codex CLI (`@openai/codex`)
+- Cursor Agent CLI (`curl https://cursor.com/install -fsS | bash`)
+- GitHub Copilot CLI (`@github/copilot`)
 
 ## Voraussetzungen
 

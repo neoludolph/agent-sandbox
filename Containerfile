@@ -24,15 +24,27 @@ RUN bash -c 'curl -fsSL "https://get.sdkman.io?rcupdate=false" | bash \
 
 ENV JAVA_HOME=${SDKMAN_DIR}/candidates/java/current
 ENV MAVEN_HOME=${SDKMAN_DIR}/candidates/maven/current
-ENV PATH=${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${PATH}
+ENV PATH=/root/.local/bin:${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${PATH}
 
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
  && rm -rf /var/lib/apt/lists/* \
- && npm install -g @anthropic-ai/claude-code
+ && npm install -g \
+      @anthropic-ai/claude-code \
+      @openai/codex \
+      @github/copilot
+
+RUN bash -o pipefail -c 'curl https://cursor.com/install -fsS | bash'
 
 RUN echo 'source "${SDKMAN_DIR}/bin/sdkman-init.sh"' >> /etc/bash.bashrc
 
-RUN java -version && mvn -version && claude --version
+RUN java -version \
+ && mvn -version \
+ && node --version \
+ && npm --version \
+ && claude --version \
+ && codex --version \
+ && cursor-agent --version \
+ && copilot --version
 
 CMD ["/bin/bash"]
