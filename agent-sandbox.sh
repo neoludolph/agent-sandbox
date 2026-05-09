@@ -17,10 +17,11 @@ mkdir -p "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR"
 docker run -it \
     --rm \
     -e CLAUDE_SKIP_AUTOUPDATER=1 \
+    -e GIT_CONFIG_GLOBAL=/tmp/host.gitconfig \
     -e HOME=/workspace \
     -e TZ="Europe/Berlin" \
     -v "$WORKSPACE_DIR":/workspace \
-    -v "$GITCONFIG":/workspace/.gitconfig:ro \
+    -v "$GITCONFIG":/tmp/host.gitconfig:ro \
     -v "$CLAUDE_DIR":/workspace/.claude \
     -v "$CODEX_DIR":/workspace/.codex \
     -v "$AGENTS_DIR":/workspace/.agents \
