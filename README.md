@@ -23,6 +23,21 @@ Konfigurationsverzeichnisse `~/.claude`, `~/.codex`, `~/.agents`, `~/.copilot`
 und `~/.cursor` werden beim Start automatisch angelegt, falls sie noch nicht
 existieren.
 
+## Unterstützte Host-Systeme
+
+Das Startskript ist für Unix-artige Hosts ausgelegt:
+
+- macOS mit Docker Desktop oder Colima
+- Linux mit Docker Engine oder einer kompatiblen Docker-Umgebung
+- Windows über WSL2, wenn Docker aus der WSL-Shell erreichbar ist
+
+Windows PowerShell und CMD werden nicht direkt unterstützt, weil das Skript
+Bash, Unix-Pfade, UID/GID-Mapping und Unix-Volume-Mounts verwendet.
+
+Das Image kann grundsätzlich auf `amd64` und `arm64` gebaut werden, sofern die
+installierten Agent-CLIs passende Linux-Binaries für die jeweilige Architektur
+bereitstellen.
+
 ## Container bauen
 
 ```bash
@@ -121,3 +136,7 @@ docker ps
   `copilot --yolo` und
   `cursor-agent`/`agent --yolo --sandbox disabled --approve-mcps`.
 - Die Zeitzone ist auf `Europe/Berlin` gesetzt.
+
+## Lizenz
+
+Dieses Projekt ist unter der MIT-Lizenz veröffentlicht. Siehe [LICENSE](LICENSE).
