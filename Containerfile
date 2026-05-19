@@ -43,6 +43,8 @@ RUN mkdir -p /opt/cursor-agent \
       ln -sf "$bin" "/usr/local/bin/$(basename "$bin")"; \
     done
 
+RUN bash -o pipefail -c 'curl -fsSL https://antigravity.google/cli/install.sh | bash -s -- --dir /usr/local/bin'
+
 RUN mkdir -p /usr/local/agent-yolo-bin \
  && printf '%s\n' \
       '#!/bin/sh' \
@@ -64,11 +66,17 @@ RUN mkdir -p /usr/local/agent-yolo-bin \
       '#!/bin/sh' \
       'exec /usr/local/bin/agent --yolo --sandbox disabled --approve-mcps "$@"' \
       > /usr/local/agent-yolo-bin/agent \
+ && printf '%s\n' \
+      '#!/bin/sh' \
+      'exec /usr/local/bin/agy --dangerously-skip-permissions "$@"' \
+      > /usr/local/agent-yolo-bin/agy \
+ && ln -sf agy /usr/local/agent-yolo-bin/antigravity \
  && chmod +x /usr/local/agent-yolo-bin/claude \
       /usr/local/agent-yolo-bin/codex \
       /usr/local/agent-yolo-bin/copilot \
       /usr/local/agent-yolo-bin/cursor-agent \
-      /usr/local/agent-yolo-bin/agent
+      /usr/local/agent-yolo-bin/agent \
+      /usr/local/agent-yolo-bin/agy
 
 RUN printf '%s\n' 'export PATH="/usr/local/agent-yolo-bin:$PATH"' \
       > /etc/profile.d/agent-yolo-path.sh \
@@ -87,7 +95,8 @@ RUN java -version \
  && claude --version \
  && codex --version \
  && cursor-agent --version \
- && copilot --version
+ && copilot --version \
+ && agy --version
 
 ENTRYPOINT []
 CMD ["/bin/bash"]

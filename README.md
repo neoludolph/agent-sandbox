@@ -13,6 +13,7 @@ Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js, Python und Agent
 - OpenAI Codex CLI (`@openai/codex`)
 - Cursor Agent CLI (`curl https://cursor.com/install -fsS | bash`)
 - GitHub Copilot CLI (`@github/copilot`)
+- Google Antigravity CLI (`agy`, via `curl -fsSL https://antigravity.google/cli/install.sh | bash`)
 
 ## Voraussetzungen
 
@@ -20,9 +21,12 @@ Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js, Python und Agent
 - `~/.gitconfig`
 
 Das persistente Container-Home `~/.agent-sandbox/home` und die
-Konfigurationsverzeichnisse `~/.claude`, `~/.codex`, `~/.agents`, `~/.copilot`
-und `~/.cursor` werden beim Start automatisch angelegt, falls sie noch nicht
-existieren.
+Konfigurationsverzeichnisse `~/.claude`, `~/.codex`, `~/.agents`, `~/.copilot`,
+`~/.cursor`, `~/.gemini/antigravity-cli` und `~/.gemini/config` werden beim
+Start automatisch angelegt, falls sie noch nicht existieren. Vorhandene Dateien
+unter `~/.gemini/` (`settings.json`, `oauth_creds.json`, `google_accounts.json`)
+werden bei Bedarf nach `/host-gemini` gemountet und beim Start nach
+`~/.gemini` verlinkt (vermeidet virtiofs-Konflikte mit dem Container-Home).
 
 ## Unterstützte Host-Systeme
 
@@ -117,6 +121,9 @@ docker ps
 | `~/.agents` | `/home/<user>/.agents` | Agent-Konfiguration und Skills |
 | `~/.copilot` | `/home/<user>/.copilot` | GitHub-Copilot-Konfiguration |
 | `~/.cursor` | `/home/<user>/.cursor` | Cursor-Konfiguration |
+| `~/.gemini/antigravity-cli` | `/home/<user>/.gemini/antigravity-cli` | Antigravity-CLI-Einstellungen, Plugins, Keybindings |
+| `~/.gemini/config` | `/home/<user>/.gemini/config` | Antigravity-Projektkonfiguration |
+| `~/.gemini/settings.json` usw. | `/host-gemini/…` → Symlink | Optional: MCP, OAuth und Account-Dateien (falls vorhanden) |
 
 ## Hinweise
 
@@ -135,7 +142,10 @@ docker ps
   `claude --dangerously-skip-permissions`,
   `codex --dangerously-bypass-approvals-and-sandbox`,
   `copilot --yolo` und
-  `cursor-agent`/`agent --yolo --sandbox disabled --approve-mcps`.
+  `cursor-agent`/`agent --yolo --sandbox disabled --approve-mcps` und
+  `agy`/`antigravity --dangerously-skip-permissions`.
+- Interaktiv entspricht das dem Autonomie-Level `always-proceed` aus `/permissions`
+  ([Antigravity CLI Features](https://antigravity.google/docs/cli-features)).
 - Die Zeitzone ist auf `Europe/Berlin` gesetzt.
 
 ## Lizenz

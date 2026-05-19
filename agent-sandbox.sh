@@ -16,9 +16,21 @@ CODEX_DIR="$HOME/.codex"
 AGENTS_DIR="$HOME/.agents"
 COPILOT_DIR="$HOME/.copilot"
 CURSOR_DIR="$HOME/.cursor"
+GEMINI_ANTIGRAVITY_CLI_DIR="$HOME/.gemini/antigravity-cli"
+GEMINI_CONFIG_DIR="$HOME/.gemini/config"
 
 [ -f "$GITCONFIG" ] || { echo "Datei $GITCONFIG nicht vorhanden"; exit 1; }
-mkdir -p "$HOST_AGENT_HOME" "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR"
+mkdir -p "$HOST_AGENT_HOME" "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR" \
+    "$GEMINI_ANTIGRAVITY_CLI_DIR" "$GEMINI_CONFIG_DIR"
+
+HOST_GEMINI_FILES="/host-gemini"
+GEMINI_AUTH_MOUNTS=()
+for gemini_file in settings.json oauth_creds.json google_accounts.json; do
+    gemini_path="$HOME/.gemini/$gemini_file"
+    if [ -f "$gemini_path" ]; then
+        GEMINI_AUTH_MOUNTS+=( -v "$gemini_path":"$HOST_GEMINI_FILES/$gemini_file":ro )
+    fi
+done
 
 PASSWD_FILE="$(mktemp)"
 GROUP_FILE="$(mktemp)"
@@ -66,7 +78,14 @@ docker run -it \
     -v "$AGENTS_DIR":"$AGENT_HOME/.agents" \
     -v "$COPILOT_DIR":"$AGENT_HOME/.copilot" \
     -v "$CURSOR_DIR":"$AGENT_HOME/.cursor" \
+    -v "$GEMINI_ANTIGRAVITY_CLI_DIR":"$AGENT_HOME/.gemini/antigravity-cli" \
+    -v "$GEMINI_CONFIG_DIR":"$AGENT_HOME/.gemini/config" \
+    "${GEMINI_AUTH_MOUNTS[@]}" \
     -w /workspace \
     --name="$CONTAINER_NAME" \
     agent-sandbox \
-    bash -lc 'mkdir -p "$HOME" "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$(dirname "$HISTFILE")" && exec bash -i'
+    bash -lc 'mkdir -p "$HOME" "$HOME/.gemini" "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$(dirname "$HISTFILE")"
+for f in settings.json oauth_creds.json google_accounts.json; do
+  [ -f "/host-gemini/$f" ] && ln -sfn "/host-gemini/$f" "$HOME/.gemini/$f"
+done
+exec bash -i'
