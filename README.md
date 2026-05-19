@@ -1,6 +1,6 @@
 # agent-sandbox
 
-Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js und Agent-CLIs.
+Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js, Python und Agent-CLIs.
 
 ## Enthalten
 
@@ -8,6 +8,7 @@ Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js und Agent-CLIs.
 - Java (Amazon Corretto 25) via SDKMAN
 - Maven 3.9.9 via SDKMAN
 - Node.js 22
+- Python 3 (inkl. `pip`, `venv`)
 - Claude Code CLI (`@anthropic-ai/claude-code`)
 - OpenAI Codex CLI (`@openai/codex`)
 - Cursor Agent CLI (`curl https://cursor.com/install -fsS | bash`)

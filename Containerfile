@@ -12,6 +12,9 @@ RUN apt-get update \
       ca-certificates \
       curl \
       git \
+      python3 \
+      python3-pip \
+      python3-venv \
       unzip \
       zip \
  && rm -rf /var/lib/apt/lists/*
@@ -79,6 +82,8 @@ RUN java -version \
  && mvn -version \
  && node --version \
  && npm --version \
+ && python3 --version \
+ && pip3 --version \
  && claude --version \
  && codex --version \
  && cursor-agent --version \
