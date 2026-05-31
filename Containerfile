@@ -17,6 +17,12 @@ RUN apt-get update \
       python3-venv \
       unzip \
       zip \
+      biber \
+      latexmk \
+      texlive-latex-extra \
+      texlive-bibtex-extra \
+      texlive-fonts-recommended \
+      texlive-lang-german \
  && rm -rf /var/lib/apt/lists/*
 
 RUN bash -c 'curl -fsSL "https://get.sdkman.io?rcupdate=false" | bash \
