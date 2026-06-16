@@ -15,6 +15,7 @@ RUN apt-get update \
       python3 \
       python3-pip \
       python3-venv \
+      python-is-python3 \
       unzip \
       zip \
       biber \
@@ -23,6 +24,25 @@ RUN apt-get update \
       texlive-bibtex-extra \
       texlive-fonts-recommended \
       texlive-lang-german \
+      libasound2 \
+      libatk-bridge2.0-0 \
+      libatk1.0-0 \
+      libcairo2 \
+      libcups2 \
+      libdbus-1-3 \
+      libdrm2 \
+      libgbm1 \
+      libnspr4 \
+      libnss3 \
+      libpango-1.0-0 \
+      libx11-6 \
+      libxcb1 \
+      libxcomposite1 \
+      libxdamage1 \
+      libxext6 \
+      libxfixes3 \
+      libxkbcommon0 \
+      libxrandr2 \
  && rm -rf /var/lib/apt/lists/*
 
 RUN bash -c 'curl -fsSL "https://get.sdkman.io?rcupdate=false" | bash \
@@ -97,6 +117,7 @@ RUN java -version \
  && node --version \
  && npm --version \
  && python3 --version \
+ && python --version \
  && pip3 --version \
  && claude --version \
  && codex --version \
