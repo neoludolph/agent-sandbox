@@ -54,6 +54,7 @@ RUN bash -c 'curl -fsSL "https://get.sdkman.io?rcupdate=false" | bash \
 ENV JAVA_HOME=${SDKMAN_DIR}/candidates/java/current
 ENV MAVEN_HOME=${SDKMAN_DIR}/candidates/maven/current
 ENV PATH=/usr/local/agent-yolo-bin:${JAVA_HOME}/bin:${MAVEN_HOME}/bin:${PATH}
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
@@ -111,6 +112,12 @@ RUN printf '%s\n' 'export PATH="/usr/local/agent-yolo-bin:$PATH"' \
       'source "${SDKMAN_DIR}/bin/sdkman-init.sh"' \
       'export PATH="/usr/local/agent-yolo-bin:$PATH"' \
       >> /etc/bash.bashrc
+
+RUN python3 -m venv /opt/patchright-install \
+ && /opt/patchright-install/bin/pip install --quiet patchright==1.55.2 \
+ && /opt/patchright-install/bin/python -m patchright install chromium \
+ && chmod -R a+rx /opt/playwright-browsers \
+ && rm -rf /opt/patchright-install
 
 RUN java -version \
  && mvn -version \
