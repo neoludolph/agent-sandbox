@@ -124,6 +124,22 @@ docker ps
 | `~/.gemini/antigravity-cli` | `/home/<user>/.gemini/antigravity-cli` | Antigravity-CLI-Einstellungen, Plugins, Keybindings |
 | `~/.gemini/config` | `/home/<user>/.gemini/config` | Antigravity-Projektkonfiguration |
 | `~/.gemini/settings.json` usw. | `/host-gemini/…` → Symlink | Optional: MCP, OAuth und Account-Dateien (falls vorhanden) |
+| `~/tools/clipboard-images` (oder `AGENT_SANDBOX_CLIPBOARD_DIR`) | `/home/<user>/clipboard` | Zwischenablage-Bilder vom macOS-Host (nur macOS) |
+
+### Zwischenablage-Bilder (macOS)
+
+Beim Start von `./agent-sandbox.sh` läuft auf macOS automatisch
+`clipboard-monitor.sh` im Hintergrund. Kopierte Bilder landen unter
+`~/tools/clipboard-images` und sind im Container unter
+`/home/<user>/clipboard/` verfügbar. Der Container-Pfad wird dabei in die
+macOS-Zwischenablage kopiert.
+
+Anderen Host-Ordner setzen:
+
+```bash
+export AGENT_SANDBOX_CLIPBOARD_DIR=/pfad/zu/clipboard-images
+./agent-sandbox.sh
+```
 
 ## Hinweise
 

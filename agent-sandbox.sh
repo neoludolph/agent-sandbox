@@ -1,9 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
+script_path="${BASH_SOURCE[0]}"
+while [[ -L "$script_path" ]]; do
+    script_dir="$(cd -P "$(dirname "$script_path")" && pwd)"
+    script_path="$(readlink "$script_path")"
+    [[ "$script_path" != /* ]] && script_path="$script_dir/$script_path"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$script_path")" && pwd)"
 CONTAINER_NAME="agent-sandbox-$$"
 WORKSPACE_DIR="${1:-$(pwd)}"
 HOST_AGENT_HOME="$HOME/.agent-sandbox/home"
+CLIPBOARD_DIR="${AGENT_SANDBOX_CLIPBOARD_DIR:-$HOME/tools/clipboard-images}"
+CLIPBOARD_MONITOR_PID=""
 HOST_UID="$(id -u)"
 HOST_GID="$(id -g)"
 HOST_USER="$(id -un)"
@@ -20,7 +29,7 @@ GEMINI_ANTIGRAVITY_CLI_DIR="$HOME/.gemini/antigravity-cli"
 GEMINI_CONFIG_DIR="$HOME/.gemini/config"
 
 [ -f "$GITCONFIG" ] || { echo "Datei $GITCONFIG nicht vorhanden"; exit 1; }
-mkdir -p "$HOST_AGENT_HOME" "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR" \
+mkdir -p "$HOST_AGENT_HOME" "$CLIPBOARD_DIR" "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR" \
     "$GEMINI_ANTIGRAVITY_CLI_DIR" "$GEMINI_CONFIG_DIR"
 
 HOST_GEMINI_FILES="/host-gemini"
@@ -35,9 +44,21 @@ done
 PASSWD_FILE="$(mktemp)"
 GROUP_FILE="$(mktemp)"
 cleanup() {
+    if [[ -n "${CLIPBOARD_MONITOR_PID:-}" ]] && kill -0 "$CLIPBOARD_MONITOR_PID" 2>/dev/null; then
+        kill "$CLIPBOARD_MONITOR_PID" 2>/dev/null || true
+        wait "$CLIPBOARD_MONITOR_PID" 2>/dev/null || true
+    fi
     rm -f "$PASSWD_FILE" "$GROUP_FILE"
 }
 trap cleanup EXIT
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    export AGENT_SANDBOX_CLIPBOARD_DIR="$CLIPBOARD_DIR"
+    export AGENT_SANDBOX_CLIPBOARD_CONTAINER_PATH="$AGENT_HOME/clipboard"
+    "$SCRIPT_DIR/clipboard-monitor.sh" >&2 &
+    CLIPBOARD_MONITOR_PID=$!
+    echo "Clipboard-Monitor aktiv: $CLIPBOARD_DIR → $AGENT_HOME/clipboard"
+fi
 
 printf '%s\n' \
     'root:x:0:0:root:/root:/bin/bash' \
@@ -80,6 +101,7 @@ docker run -it \
     -v "$CURSOR_DIR":"$AGENT_HOME/.cursor" \
     -v "$GEMINI_ANTIGRAVITY_CLI_DIR":"$AGENT_HOME/.gemini/antigravity-cli" \
     -v "$GEMINI_CONFIG_DIR":"$AGENT_HOME/.gemini/config" \
+    -v "$CLIPBOARD_DIR":"$AGENT_HOME/clipboard" \
     "${GEMINI_AUTH_MOUNTS[@]}" \
     -w /workspace \
     --name="$CONTAINER_NAME" \
