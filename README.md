@@ -131,8 +131,16 @@ docker ps
 Beim Start von `./agent-sandbox.sh` läuft auf macOS automatisch
 `clipboard-monitor.sh` im Hintergrund. Kopierte Bilder landen unter
 `~/tools/clipboard-images` und sind im Container unter
-`/home/<user>/clipboard/` verfügbar. Der Container-Pfad wird dabei in die
-macOS-Zwischenablage kopiert.
+`/home/<user>/clipboard/` verfügbar. Die Zwischenablage enthält danach
+**Bild und Container-Pfad gleichzeitig**: In Apps wie Slack/Preview wird das
+Bild eingefügt, im Container-Terminal der Pfad.
+
+Im Container:
+
+```bash
+cat ~/clipboard/.latest-container-path   # letzter Pfad
+ls ~/clipboard/latest.png                  # Symlink auf letztes Bild
+```
 
 Anderen Host-Ordner setzen:
 

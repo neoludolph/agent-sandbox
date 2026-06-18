@@ -55,7 +55,8 @@ trap cleanup EXIT
 if [[ "$(uname -s)" == "Darwin" ]]; then
     export AGENT_SANDBOX_CLIPBOARD_DIR="$CLIPBOARD_DIR"
     export AGENT_SANDBOX_CLIPBOARD_CONTAINER_PATH="$AGENT_HOME/clipboard"
-    "$SCRIPT_DIR/clipboard-monitor.sh" >&2 &
+    CLIPBOARD_LOG="$HOST_AGENT_HOME/clipboard-monitor.log"
+    "$SCRIPT_DIR/clipboard-monitor.sh" >>"$CLIPBOARD_LOG" 2>&1 &
     CLIPBOARD_MONITOR_PID=$!
     echo "Clipboard-Monitor aktiv: $CLIPBOARD_DIR → $AGENT_HOME/clipboard"
 fi

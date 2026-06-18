@@ -34,12 +34,30 @@ end run
 APPLESCRIPT
 }
 
+restore_clipboard() {
+    local infile="$1"
+    local docker_path="$2"
+    osascript - "$infile" "$docker_path" <<'APPLESCRIPT'
+on run argv
+    set imagePath to item 1 of argv
+    set pathText to item 2 of argv
+    try
+        set imageData to read (POSIX file imagePath) as «class PNGf»
+        set the clipboard to {«class PNGf»:imageData, string:pathText}
+        return "ok"
+    on error
+        return "fail"
+    end try
+end run
+APPLESCRIPT
+}
+
 last_hash=""
 
 while true; do
     sleep 0.5
 
-    tmp="$(mktemp "${TMPDIR:-/tmp}/clipboard-monitor.XXXXXX.png")"
+    tmp="$(mktemp "${TMPDIR:-/tmp}/clipboard-monitor.XXXXXX")"
     if [[ "$(save_clipboard_png "$tmp")" != "ok" ]]; then
         rm -f "$tmp"
         continue
@@ -57,10 +75,12 @@ while true; do
     mv "$tmp" "$full_path"
 
     docker_path="$CONTAINER_PREFIX/$filename"
-    printf '%s' "$docker_path" | pbcopy
+    printf '%s\n' "$docker_path" > "$OUTPUT_FOLDER/.latest-container-path"
+    ln -sfn "$filename" "$OUTPUT_FOLDER/latest.png"
+    restore_clipboard "$full_path" "$docker_path" >/dev/null
 
-    echo "[$(date +%H:%M:%S)] Gespeichert: $filename" >&2
-    echo "    Container-Pfad in Zwischenablage: $docker_path" >&2
+    echo "[$(date +%H:%M:%S)] Gespeichert: $filename"
+    echo "    Container-Pfad: $docker_path"
 
     last_hash="$hash"
 done
