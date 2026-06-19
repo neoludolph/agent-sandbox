@@ -14,6 +14,7 @@ Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js, Python und Agent
 - Cursor Agent CLI (`curl https://cursor.com/install -fsS | bash`)
 - GitHub Copilot CLI (`@github/copilot`)
 - GitHub CLI (`gh`, offizielles APT-Repository)
+- GitHub MCP Server (`github-mcp-server`, offizielles Binary-Release)
 - Google Antigravity CLI (`agy`, via `curl -fsSL https://antigravity.google/cli/install.sh | bash`)
 
 ## Voraussetzungen
@@ -90,6 +91,52 @@ cd /dein/projekt
 agent-sandbox
 ```
 
+### GitHub MCP
+
+Der Container bringt den offiziellen [GitHub MCP Server](https://github.com/github/github-mcp-server)
+als Binary mit. Die MCP-Konfiguration liegt getrennt vom Host:
+
+| Agent | Datei |
+|-------|-------|
+| Cursor Agent CLI | `~/.agent-sandbox/cursor/mcp.json` |
+| Claude Code | `~/.agent-sandbox/claude/mcp-servers.json` → wird in `~/.agent-sandbox/home/.claude.json` gemergt |
+
+Beim ersten Start werden Default-Dateien angelegt. Host-Pfade aus `~/.cursor/mcp.json`
+oder `~/.claude.json` funktionieren im Container nicht.
+
+**Einmalig authentifizieren** (im Container):
+
+```bash
+gh auth login
+```
+
+Das Token wird in `~/.agent-sandbox/home/.config/gh/` gespeichert. Beim Start
+liest das Skript es via `gh auth token` und setzt `GITHUB_PERSONAL_ACCESS_TOKEN`.
+Alternativ kann das Token vom Host übergeben werden:
+
+```bash
+export GITHUB_PERSONAL_ACCESS_TOKEN="$(gh auth token)"
+./agent-sandbox.sh
+```
+
+**Prüfen** (im Container):
+
+```bash
+# Cursor Agent CLI
+cursor-agent mcp list
+cursor-agent mcp list-tools github
+
+# Claude Code
+claude mcp list
+claude mcp get github
+```
+
+Für **Copilot CLI** ist der GitHub MCP eingebaut — nach `gh auth login` reicht
+`/mcp show github-mcp-server`.
+
+Weitere MCP-Server kannst du in den Container-Config-Dateien ergänzen.
+Nur Container-Pfade oder HTTP-URLs verwenden, keine Host-Pfade wie `/Users/...`.
+
 ## Container verwalten
 
 **Beenden** (im Container):
@@ -122,7 +169,10 @@ docker ps
 | `~/.codex` | `/home/<user>/.codex` | Codex-Konfiguration |
 | `~/.agents` | `/home/<user>/.agents` | Agent-Konfiguration und Skills |
 | `~/.copilot` | `/home/<user>/.copilot` | GitHub-Copilot-Konfiguration |
-| `~/.cursor` | `/home/<user>/.cursor` | Cursor-Konfiguration |
+| `~/.cursor` | `/home/<user>/.cursor` | Cursor-Konfiguration (Skills, Rules usw.) |
+| `~/.agent-sandbox/cursor/mcp.json` | `/home/<user>/.cursor/mcp.json` | Container-MCP für Cursor Agent CLI |
+| `~/.agent-sandbox/claude/mcp-servers.json` | (gemergt in Container-Home) | Container-MCP für Claude Code |
+| `~/.agent-sandbox/home/.claude.json` | `/home/<user>/.claude.json` | Claude-Code-State inkl. gemergter MCP-Server |
 | `~/.gemini/antigravity-cli` | `/home/<user>/.gemini/antigravity-cli` | Antigravity-CLI-Einstellungen, Plugins, Keybindings |
 | `~/.gemini/config` | `/home/<user>/.gemini/config` | Antigravity-Projektkonfiguration |
 | `~/.gemini/settings.json` usw. | `/host-gemini/…` → Symlink | Optional: MCP, OAuth und Account-Dateien (falls vorhanden) |

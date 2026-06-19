@@ -2,6 +2,7 @@ FROM debian:12-slim
 
 ARG JAVA_VERSION=25-amzn
 ARG MAVEN_VERSION=3.9.9
+ARG GITHUB_MCP_VERSION=v1.4.0
 
 ENV SDKMAN_DIR=/opt/sdkman
 ENV DEBIAN_FRONTEND=noninteractive
@@ -65,6 +66,16 @@ RUN mkdir -p -m 755 /etc/apt/keyrings \
  && apt-get update \
  && apt-get install -y --no-install-recommends gh \
  && rm -rf /var/lib/apt/lists/*
+
+RUN arch="$(uname -m)" \
+ && case "$arch" in \
+      x86_64)  asset="github-mcp-server_Linux_x86_64.tar.gz" ;; \
+      aarch64) asset="github-mcp-server_Linux_arm64.tar.gz" ;; \
+      *) echo "unsupported architecture: $arch" >&2; exit 1 ;; \
+    esac \
+ && curl -fsSL "https://github.com/github/github-mcp-server/releases/download/${GITHUB_MCP_VERSION}/${asset}" \
+      | tar -xz -C /usr/local/bin github-mcp-server \
+ && chmod +x /usr/local/bin/github-mcp-server
 
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
@@ -141,7 +152,8 @@ RUN java -version \
  && cursor-agent --version \
  && copilot --version \
  && agy --version \
- && gh --version
+ && gh --version \
+ && github-mcp-server --version
 
 ENTRYPOINT []
 CMD ["/bin/bash"]

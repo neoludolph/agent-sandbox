@@ -10,7 +10,12 @@ done
 SCRIPT_DIR="$(cd -P "$(dirname "$script_path")" && pwd)"
 CONTAINER_NAME="agent-sandbox-$$"
 WORKSPACE_DIR="${1:-$(pwd)}"
-HOST_AGENT_HOME="$HOME/.agent-sandbox/home"
+SANDBOX_DIR="$HOME/.agent-sandbox"
+HOST_AGENT_HOME="$SANDBOX_DIR/home"
+CURSOR_MCP_DIR="$SANDBOX_DIR/cursor"
+CURSOR_MCP_FILE="$CURSOR_MCP_DIR/mcp.json"
+CLAUDE_MCP_DIR="$SANDBOX_DIR/claude"
+CLAUDE_MCP_FILE="$CLAUDE_MCP_DIR/mcp-servers.json"
 CLIPBOARD_DIR="${AGENT_SANDBOX_CLIPBOARD_DIR:-$HOME/tools/clipboard-images}"
 CLIPBOARD_MONITOR_PID=""
 HOST_UID="$(id -u)"
@@ -29,8 +34,72 @@ GEMINI_ANTIGRAVITY_CLI_DIR="$HOME/.gemini/antigravity-cli"
 GEMINI_CONFIG_DIR="$HOME/.gemini/config"
 
 [ -f "$GITCONFIG" ] || { echo "Datei $GITCONFIG nicht vorhanden"; exit 1; }
-mkdir -p "$HOST_AGENT_HOME" "$CLIPBOARD_DIR" "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR" \
+mkdir -p "$HOST_AGENT_HOME" "$CURSOR_MCP_DIR" "$CLAUDE_MCP_DIR" "$CLIPBOARD_DIR" "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR" \
     "$GEMINI_ANTIGRAVITY_CLI_DIR" "$GEMINI_CONFIG_DIR"
+
+if [ ! -f "$CURSOR_MCP_FILE" ]; then
+    cat > "$CURSOR_MCP_FILE" <<'EOF'
+{
+  "mcpServers": {
+    "github": {
+      "command": "/usr/local/bin/github-mcp-server",
+      "args": ["stdio"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  }
+}
+EOF
+fi
+
+if [ ! -f "$CLAUDE_MCP_FILE" ]; then
+    cat > "$CLAUDE_MCP_FILE" <<'EOF'
+{
+  "mcpServers": {
+    "github": {
+      "type": "stdio",
+      "command": "/usr/local/bin/github-mcp-server",
+      "args": ["stdio"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  }
+}
+EOF
+fi
+
+merge_claude_mcp_servers() {
+    python3 - "$HOST_AGENT_HOME/.claude.json" "$CLAUDE_MCP_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+claude_path = Path(sys.argv[1])
+fragment_path = Path(sys.argv[2])
+
+fragment = json.loads(fragment_path.read_text())
+fragment_servers = fragment.get("mcpServers", fragment)
+
+if claude_path.is_file():
+    data = json.loads(claude_path.read_text())
+else:
+    data = {}
+
+servers = data.setdefault("mcpServers", {})
+for name, config in fragment_servers.items():
+    servers[name] = config
+
+claude_path.write_text(json.dumps(data, indent=2) + "\n")
+PY
+}
+merge_claude_mcp_servers
+
+GITHUB_TOKEN="${GITHUB_PERSONAL_ACCESS_TOKEN:-}"
+if [ -z "$GITHUB_TOKEN" ] && command -v gh >/dev/null 2>&1; then
+    GITHUB_TOKEN="$(gh auth token 2>/dev/null || true)"
+fi
 
 HOST_GEMINI_FILES="/host-gemini"
 GEMINI_AUTH_MOUNTS=()
@@ -90,6 +159,7 @@ docker run -it \
     -e XDG_CONFIG_HOME="$AGENT_HOME/.config" \
     -e XDG_DATA_HOME="$AGENT_HOME/.local/share" \
     -e XDG_STATE_HOME="$AGENT_HOME/.local/state" \
+    ${GITHUB_TOKEN:+-e GITHUB_PERSONAL_ACCESS_TOKEN="$GITHUB_TOKEN"} \
     -v "$WORKSPACE_DIR":/workspace \
     -v "$PASSWD_FILE":/etc/passwd:ro \
     -v "$GROUP_FILE":/etc/group:ro \
@@ -100,6 +170,7 @@ docker run -it \
     -v "$AGENTS_DIR":"$AGENT_HOME/.agents" \
     -v "$COPILOT_DIR":"$AGENT_HOME/.copilot" \
     -v "$CURSOR_DIR":"$AGENT_HOME/.cursor" \
+    -v "$CURSOR_MCP_FILE":"$AGENT_HOME/.cursor/mcp.json" \
     -v "$GEMINI_ANTIGRAVITY_CLI_DIR":"$AGENT_HOME/.gemini/antigravity-cli" \
     -v "$GEMINI_CONFIG_DIR":"$AGENT_HOME/.gemini/config" \
     -v "$CLIPBOARD_DIR":"$AGENT_HOME/clipboard" \
@@ -118,5 +189,8 @@ elif ! grep -qF "$HOST_GITCONFIG" "$HOME/.gitconfig"; then
   tmp="$(mktemp)"
   { printf "%s\n" "[include]" "    path = $HOST_GITCONFIG" ""; cat "$HOME/.gitconfig"; } > "$tmp"
   mv "$tmp" "$HOME/.gitconfig"
+fi
+if [ -z "${GITHUB_PERSONAL_ACCESS_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
+  export GITHUB_PERSONAL_ACCESS_TOKEN="$(gh auth token 2>/dev/null || true)"
 fi
 exec bash -i'
