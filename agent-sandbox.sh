@@ -77,7 +77,7 @@ docker run -it \
     --entrypoint "" \
     --user "$HOST_UID:$HOST_GID" \
     -e CLAUDE_SKIP_AUTOUPDATER=1 \
-    -e GIT_CONFIG_GLOBAL=/tmp/host.gitconfig \
+    -e GIT_CONFIG_GLOBAL="$AGENT_HOME/.gitconfig" \
     -e HISTFILE="$AGENT_HOME/.bash_history.$$" \
     -e HOME="$AGENT_HOME" \
     -e LOGNAME="$HOST_USER" \
@@ -111,4 +111,12 @@ docker run -it \
 for f in settings.json oauth_creds.json google_accounts.json; do
   [ -f "/host-gemini/$f" ] && ln -sfn "/host-gemini/$f" "$HOME/.gemini/$f"
 done
+HOST_GITCONFIG=/tmp/host.gitconfig
+if [ ! -f "$HOME/.gitconfig" ]; then
+  printf "%s\n" "[include]" "    path = $HOST_GITCONFIG" > "$HOME/.gitconfig"
+elif ! grep -qF "$HOST_GITCONFIG" "$HOME/.gitconfig"; then
+  tmp="$(mktemp)"
+  { printf "%s\n" "[include]" "    path = $HOST_GITCONFIG" ""; cat "$HOME/.gitconfig"; } > "$tmp"
+  mv "$tmp" "$HOME/.gitconfig"
+fi
 exec bash -i'

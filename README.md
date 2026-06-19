@@ -13,6 +13,7 @@ Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js, Python und Agent
 - OpenAI Codex CLI (`@openai/codex`)
 - Cursor Agent CLI (`curl https://cursor.com/install -fsS | bash`)
 - GitHub Copilot CLI (`@github/copilot`)
+- GitHub CLI (`gh`, offizielles APT-Repository)
 - Google Antigravity CLI (`agy`, via `curl -fsSL https://antigravity.google/cli/install.sh | bash`)
 
 ## Voraussetzungen
@@ -115,7 +116,8 @@ docker ps
 |------|-----------|--------------|
 | aktuelles Verzeichnis oder Argument | `/workspace` | Projektdateien |
 | `~/.agent-sandbox/home` | `/home/<user>` | Persistentes Container-Home |
-| `~/.gitconfig` | `/tmp/host.gitconfig` | Git-Konfiguration, read-only |
+| `~/.gitconfig` | `/tmp/host.gitconfig` | Host-Git-Konfiguration, read-only (per `[include]` in `~/.agent-sandbox/home/.gitconfig`) |
+| `~/.agent-sandbox/home/.gitconfig` | `/home/<user>/.gitconfig` | Beschreibbare Git-Konfiguration im Container (z. B. für `gh auth login`) |
 | `~/.claude` | `/home/<user>/.claude` | Claude-Konfiguration |
 | `~/.codex` | `/home/<user>/.codex` | Codex-Konfiguration |
 | `~/.agents` | `/home/<user>/.agents` | Agent-Konfiguration und Skills |
