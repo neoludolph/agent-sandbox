@@ -16,6 +16,9 @@ CURSOR_MCP_DIR="$SANDBOX_DIR/cursor"
 CURSOR_MCP_FILE="$CURSOR_MCP_DIR/mcp.json"
 CLAUDE_MCP_DIR="$SANDBOX_DIR/claude"
 CLAUDE_MCP_FILE="$CLAUDE_MCP_DIR/mcp-servers.json"
+CODEX_MCP_DIR="$SANDBOX_DIR/codex"
+CODEX_MCP_FILE="$CODEX_MCP_DIR/mcp-servers.toml"
+CODEX_CONFIG_FILE="$CODEX_MCP_DIR/config.toml"
 CLIPBOARD_DIR="${AGENT_SANDBOX_CLIPBOARD_DIR:-$HOME/tools/clipboard-images}"
 CLIPBOARD_MONITOR_PID=""
 HOST_UID="$(id -u)"
@@ -34,7 +37,7 @@ GEMINI_ANTIGRAVITY_CLI_DIR="$HOME/.gemini/antigravity-cli"
 GEMINI_CONFIG_DIR="$HOME/.gemini/config"
 
 [ -f "$GITCONFIG" ] || { echo "Datei $GITCONFIG nicht vorhanden"; exit 1; }
-mkdir -p "$HOST_AGENT_HOME" "$CURSOR_MCP_DIR" "$CLAUDE_MCP_DIR" "$CLIPBOARD_DIR" "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR" \
+mkdir -p "$HOST_AGENT_HOME" "$CURSOR_MCP_DIR" "$CLAUDE_MCP_DIR" "$CODEX_MCP_DIR" "$CLIPBOARD_DIR" "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR" \
     "$GEMINI_ANTIGRAVITY_CLI_DIR" "$GEMINI_CONFIG_DIR"
 
 if [ ! -f "$CURSOR_MCP_FILE" ]; then
@@ -69,6 +72,46 @@ if [ ! -f "$CLAUDE_MCP_FILE" ]; then
 }
 EOF
 fi
+
+if [ ! -f "$CODEX_MCP_FILE" ]; then
+    cat > "$CODEX_MCP_FILE" <<'EOF'
+[mcp_servers.github]
+command = "/usr/local/bin/github-mcp-server"
+args = ["stdio"]
+
+[mcp_servers.github.env]
+GITHUB_PERSONAL_ACCESS_TOKEN = "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+EOF
+fi
+
+merge_codex_mcp_servers() {
+    if [ ! -f "$CODEX_CONFIG_FILE" ]; then
+        cat > "$CODEX_CONFIG_FILE" <<'EOF'
+[projects."/workspace"]
+trust_level = "trusted"
+EOF
+    elif ! grep -qF '[projects."/workspace"]' "$CODEX_CONFIG_FILE"; then
+        cat >> "$CODEX_CONFIG_FILE" <<'EOF'
+
+[projects."/workspace"]
+trust_level = "trusted"
+EOF
+    fi
+
+    if grep -q 'command = "/usr/local/bin/github-mcp-server"' "$CODEX_CONFIG_FILE" 2>/dev/null; then
+        return 0
+    fi
+
+    if command -v codex >/dev/null 2>&1; then
+        CODEX_HOME="$CODEX_MCP_DIR" codex mcp remove github >/dev/null 2>&1 || true
+        CODEX_HOME="$CODEX_MCP_DIR" codex mcp add github \
+            --env GITHUB_PERSONAL_ACCESS_TOKEN='${GITHUB_PERSONAL_ACCESS_TOKEN}' \
+            -- /usr/local/bin/github-mcp-server stdio
+    elif ! grep -q '^\[mcp_servers\.github\]' "$CODEX_CONFIG_FILE"; then
+        printf '\n%s\n' "$(cat "$CODEX_MCP_FILE")" >> "$CODEX_CONFIG_FILE"
+    fi
+}
+merge_codex_mcp_servers
 
 merge_claude_mcp_servers() {
     python3 - "$HOST_AGENT_HOME/.claude.json" "$CLAUDE_MCP_FILE" <<'PY'
@@ -146,6 +189,7 @@ docker run -it \
     --entrypoint "" \
     --user "$HOST_UID:$HOST_GID" \
     -e CLAUDE_SKIP_AUTOUPDATER=1 \
+    -e CODEX_HOME="$AGENT_HOME/.codex" \
     -e GIT_CONFIG_GLOBAL="$AGENT_HOME/.gitconfig" \
     -e HISTFILE="$AGENT_HOME/.bash_history.$$" \
     -e HOME="$AGENT_HOME" \
@@ -166,7 +210,8 @@ docker run -it \
     -v "$GITCONFIG":/tmp/host.gitconfig:ro \
     -v "$HOST_AGENT_HOME":"$AGENT_HOME" \
     -v "$CLAUDE_DIR":"$AGENT_HOME/.claude" \
-    -v "$CODEX_DIR":"$AGENT_HOME/.codex" \
+    -v "$CODEX_MCP_DIR":"$AGENT_HOME/.codex" \
+    -v "$CODEX_DIR":"/host-codex:ro" \
     -v "$AGENTS_DIR":"$AGENT_HOME/.agents" \
     -v "$COPILOT_DIR":"$AGENT_HOME/.copilot" \
     -v "$CURSOR_DIR":"$AGENT_HOME/.cursor" \
@@ -193,4 +238,8 @@ fi
 if [ -z "${GITHUB_PERSONAL_ACCESS_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
   export GITHUB_PERSONAL_ACCESS_TOKEN="$(gh auth token 2>/dev/null || true)"
 fi
+for f in auth.json hooks.json; do
+  [ -f "/host-codex/$f" ] && [ ! -f "$HOME/.codex/$f" ] && cp "/host-codex/$f" "$HOME/.codex/$f"
+done
+[ -d /host-codex/skills ] && [ ! -e "$HOME/.codex/skills" ] && ln -sfn /host-codex/skills "$HOME/.codex/skills"
 exec bash -i'

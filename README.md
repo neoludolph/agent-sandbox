@@ -100,9 +100,10 @@ als Binary mit. Die MCP-Konfiguration liegt getrennt vom Host:
 |-------|-------|
 | Cursor Agent CLI | `~/.agent-sandbox/cursor/mcp.json` |
 | Claude Code | `~/.agent-sandbox/claude/mcp-servers.json` → wird in `~/.agent-sandbox/home/.claude.json` gemergt |
+| Codex CLI | `~/.agent-sandbox/codex/` → beschreibbares `CODEX_HOME` im Container |
 
-Beim ersten Start werden Default-Dateien angelegt. Host-Pfade aus `~/.cursor/mcp.json`
-oder `~/.claude.json` funktionieren im Container nicht.
+Beim ersten Start werden Default-Dateien angelegt. Host-Pfade aus `~/.cursor/mcp.json`,
+`~/.claude.json` oder `~/.codex/config.toml` funktionieren im Container nicht.
 
 **Einmalig authentifizieren** (im Container):
 
@@ -129,12 +130,17 @@ cursor-agent mcp list-tools github
 # Claude Code
 claude mcp list
 claude mcp get github
+
+# Codex CLI
+codex mcp list
+codex mcp get github
 ```
 
 Für **Copilot CLI** ist der GitHub MCP eingebaut — nach `gh auth login` reicht
 `/mcp show github-mcp-server`.
 
-Weitere MCP-Server kannst du in den Container-Config-Dateien ergänzen.
+Weitere MCP-Server kannst du in den Container-Config-Dateien ergänzen
+(`~/.agent-sandbox/codex/config.toml` für Codex).
 Nur Container-Pfade oder HTTP-URLs verwenden, keine Host-Pfade wie `/Users/...`.
 
 ## Container verwalten
@@ -166,7 +172,8 @@ docker ps
 | `~/.gitconfig` | `/tmp/host.gitconfig` | Host-Git-Konfiguration, read-only (per `[include]` in `~/.agent-sandbox/home/.gitconfig`) |
 | `~/.agent-sandbox/home/.gitconfig` | `/home/<user>/.gitconfig` | Beschreibbare Git-Konfiguration im Container (z. B. für `gh auth login`) |
 | `~/.claude` | `/home/<user>/.claude` | Claude-Konfiguration |
-| `~/.codex` | `/home/<user>/.codex` | Codex-Konfiguration |
+| `~/.agent-sandbox/codex` | `/home/<user>/.codex` | Codex-Home im Container (beschreibbar, inkl. MCP und Hook-Trust) |
+| `~/.codex` | `/host-codex` (read-only) | Host-Codex: `auth.json`, `skills` usw. werden bei Bedarf übernommen |
 | `~/.agents` | `/home/<user>/.agents` | Agent-Konfiguration und Skills |
 | `~/.copilot` | `/home/<user>/.copilot` | GitHub-Copilot-Konfiguration |
 | `~/.cursor` | `/home/<user>/.cursor` | Cursor-Konfiguration (Skills, Rules usw.) |
