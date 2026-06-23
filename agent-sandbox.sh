@@ -177,6 +177,10 @@ cat > "$HOST_AGENT_HOME/.agent-sandbox-clipboard.sh" <<'EOF'
 clip-path() {
     cat "$HOME/clipboard/.latest-container-path" 2>/dev/null || echo "$HOME/clipboard/latest.png"
 }
+clip-img() {
+    echo "Letztes Bild: $(clip-path)"
+    ls -la "$HOME/clipboard/latest.png" 2>/dev/null
+}
 EOF
 
 printf '%s\n' \
@@ -254,5 +258,6 @@ for f in .credentials.json settings.json settings.local.json; do
   [ -f "/host-claude/$f" ] && [ ! -f "$HOME/.claude/$f" ] && cp "/host-claude/$f" "$HOME/.claude/$f"
 done
 [ -d /host-claude/hooks ] && [ ! -e "$HOME/.claude/hooks" ] && cp -R /host-claude/hooks "$HOME/.claude/hooks"
+[ -d /host-claude/skills ] && [ ! -e "$HOME/.claude/skills" ] && ln -sfn /host-claude/skills "$HOME/.claude/skills"
 grep -qF agent-sandbox-clipboard.sh "$HOME/.bashrc" 2>/dev/null || printf "%s\n" "[ -f \"\$HOME/.agent-sandbox-clipboard.sh\" ] && . \"\$HOME/.agent-sandbox-clipboard.sh\"" >> "$HOME/.bashrc"
 exec bash -i'

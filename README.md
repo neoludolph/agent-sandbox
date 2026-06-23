@@ -172,7 +172,7 @@ docker ps
 | `~/.gitconfig` | `/tmp/host.gitconfig` | Host-Git-Konfiguration, read-only (per `[include]` in `~/.agent-sandbox/home/.gitconfig`) |
 | `~/.agent-sandbox/home/.gitconfig` | `/home/<user>/.gitconfig` | Beschreibbare Git-Konfiguration im Container (z. B. für `gh auth login`) |
 | `~/.agent-sandbox/home/.claude` | `/home/<user>/.claude` | Claude-Code-Daten im Container (Credentials, Hooks; getrennt vom Host) |
-| `~/.claude` | `/host-claude` (read-only) | Host-Claude: wird beim ersten Start für Credentials/Hooks übernommen |
+| `~/.claude` | `/host-claude` (read-only) | Host-Claude: Credentials/Hooks/Skills werden beim Start übernommen bzw. verlinkt |
 | `~/.agent-sandbox/codex` | `/home/<user>/.codex` | Codex-Home im Container (beschreibbar, inkl. MCP und Hook-Trust) |
 | `~/.codex` | `/host-codex` (read-only) | Host-Codex: `auth.json`, `skills` usw. werden bei Bedarf übernommen |
 | `~/.agents` | `/home/<user>/.agents` | Agent-Konfiguration und Skills |
@@ -188,29 +188,73 @@ docker ps
 
 ### Zwischenablage-Bilder (macOS)
 
+**Ziel:** Ein Bild vom Mac (Screenshot, Browser, …) soll im Container
+verfügbar sein — z. B. als Dateipfad in einem Claude-Code-Prompt.
+
 Beim Start von `./agent-sandbox.sh` läuft auf macOS automatisch
-`clipboard-monitor.sh` im Hintergrund. Kopierte Bilder werden unter
-`~/tools/clipboard-images` gespeichert und sind im Container unter
-`/home/<user>/clipboard/` verfügbar.
+`clipboard-monitor.sh` im Hintergrund. Sobald du ein Bild mit **Cmd+C** kopierst,
+wird es unter `~/tools/clipboard-images` gespeichert und ist im Container unter
+`/home/<user>/clipboard/` erreichbar.
 
-**Host:** Die Zwischenablage bleibt unverändert, solange kein Terminal im
-Vordergrund ist – Copy & Paste von Bildern in Slack, Preview usw. funktioniert
-normal.
+Die **Host-Zwischenablage wird beim normalen Kopieren nie verändert** — Copy &
+Paste von Bildern auf dem Mac funktioniert uneingeschränkt weiter.
 
-**Container:** Wechselst du mit einem kopierten Bild ins Terminal (Cursor,
-iTerm, Terminal …), wird der Container-Pfad in die Zwischenablage gelegt und
-kann per Cmd+V eingefügt werden. Verlässt du das Terminal wieder, wird nur
-das Bild wiederhergestellt.
+#### Empfohlener Ablauf (4 Schritte)
 
-Im Container:
+1. **Sandbox starten** (falls noch nicht aktiv):
+   ```bash
+   ./agent-sandbox.sh
+   ```
+   Der Clipboard-Monitor läuft nur, solange die Sandbox gestartet wurde.
 
-```bash
-cat ~/clipboard/.latest-container-path   # letzter Pfad
-ls ~/clipboard/latest.png                  # Symlink auf letztes Bild
-clip-path                                  # Pfad-Helfer (falls Cmd+V nicht greift)
-```
+2. **Bild auf dem Mac kopieren** — wie gewohnt **Cmd+C** (Screenshot, Browser,
+   Vorschau, …). Du musst nichts manuell speichern oder hochladen.
 
-Anderen Host-Ordner setzen:
+3. **Im Container-Terminal** den Pfad holen:
+   ```bash
+   clip-path
+   ```
+   Ausgabe z. B. `~/clipboard/clipboard-image-20260623_221200.png`
+
+4. **Pfad in den Agent-Prompt einfügen**, z. B. in Claude Code:
+   ```
+   Was siehst du auf diesem Bild?
+   ~/clipboard/clipboard-image-20260623_221200.png
+   ```
+
+   Statt `clip-path` kannst du auch immer den festen Symlink verwenden:
+   ```bash
+   ~/clipboard/latest.png    # zeigt auf das zuletzt kopierte Bild
+   ```
+
+#### Alternative: Pfad per Cmd+V einfügen (Host-Skript)
+
+Nur nötig, wenn du den Pfad **vom Mac aus** per **Cmd+V** ins Container-Terminal
+einfügen willst (z. B. per Tastenkürzel), statt `clip-path` im Container zu tippen.
+
+1. Sandbox läuft, Bild wurde mit **Cmd+C** kopiert (siehe oben).
+2. **Auf dem Mac** (zweites Terminal oder Automator-Kurzbefehl):
+   ```bash
+   ./clipboard-paste-path.sh
+   # oder, wenn im PATH: clipboard-paste-path
+   ```
+3. Das Skript gibt eine Zeile aus, z. B.:
+   `/home/<user>/clipboard/clipboard-image-20260623_221200.png`
+   Gleichzeitig liegt **dieser Text** in der macOS-Zwischenablage.
+4. **Im Container-Terminal** **Cmd+V** drücken — der Pfad wird eingefügt.
+
+   Den Terminal-Output musst du nicht extra kopieren; er dient nur zur Kontrolle.
+   Den Pfad **nicht auf dem Mac öffnen** — er existiert nur im Container.
+
+#### Wann muss der Container laufen?
+
+| Aktion | Container nötig? |
+|--------|------------------|
+| `clipboard-paste-path.sh` ausführen | Nein (liest nur eine Datei auf dem Mac) |
+| Neues Bild erfassen (Cmd+C) | Ja — Clipboard-Monitor muss laufen |
+| Bild/Pfad im Container nutzen | Ja |
+
+#### Anderen Host-Ordner setzen
 
 ```bash
 export AGENT_SANDBOX_CLIPBOARD_DIR=/pfad/zu/clipboard-images
@@ -225,7 +269,8 @@ export AGENT_SANDBOX_CLIPBOARD_DIR=/pfad/zu/clipboard-images
 - Claude-Code-Credentials liegen isoliert unter `~/.agent-sandbox/home/.claude/`,
   damit der Host-Daemon (`~/.claude/daemon`) die Container-Session nicht
   invalidiert. Beim ersten Start werden vorhandene Credentials von
-  `~/.claude/.credentials.json` einmalig übernommen.
+  `~/.claude/.credentials.json` einmalig übernommen. Skills unter
+  `~/.claude/skills/` werden als Symlink nach `/host-claude/skills` eingebunden.
 - `HOME`, `HISTFILE` und die XDG-Verzeichnisse zeigen auf `/home/<user>`.
   Dadurch landen `.bash_history`, `.cache`, `.local`, `.npm` und
   Claude-Home-Dateien nicht mehr in `/workspace`, bleiben aber unter
