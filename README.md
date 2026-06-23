@@ -171,7 +171,8 @@ docker ps
 | `~/.agent-sandbox/home` | `/home/<user>` | Persistentes Container-Home |
 | `~/.gitconfig` | `/tmp/host.gitconfig` | Host-Git-Konfiguration, read-only (per `[include]` in `~/.agent-sandbox/home/.gitconfig`) |
 | `~/.agent-sandbox/home/.gitconfig` | `/home/<user>/.gitconfig` | Beschreibbare Git-Konfiguration im Container (z. B. für `gh auth login`) |
-| `~/.claude` | `/home/<user>/.claude` | Claude-Konfiguration |
+| `~/.agent-sandbox/home/.claude` | `/home/<user>/.claude` | Claude-Code-Daten im Container (Credentials, Hooks; getrennt vom Host) |
+| `~/.claude` | `/host-claude` (read-only) | Host-Claude: wird beim ersten Start für Credentials/Hooks übernommen |
 | `~/.agent-sandbox/codex` | `/home/<user>/.codex` | Codex-Home im Container (beschreibbar, inkl. MCP und Hook-Trust) |
 | `~/.codex` | `/host-codex` (read-only) | Host-Codex: `auth.json`, `skills` usw. werden bei Bedarf übernommen |
 | `~/.agents` | `/home/<user>/.agents` | Agent-Konfiguration und Skills |
@@ -188,17 +189,25 @@ docker ps
 ### Zwischenablage-Bilder (macOS)
 
 Beim Start von `./agent-sandbox.sh` läuft auf macOS automatisch
-`clipboard-monitor.sh` im Hintergrund. Kopierte Bilder landen unter
-`~/tools/clipboard-images` und sind im Container unter
-`/home/<user>/clipboard/` verfügbar. Die Zwischenablage enthält danach
-**Bild und Container-Pfad gleichzeitig**: In Apps wie Slack/Preview wird das
-Bild eingefügt, im Container-Terminal der Pfad.
+`clipboard-monitor.sh` im Hintergrund. Kopierte Bilder werden unter
+`~/tools/clipboard-images` gespeichert und sind im Container unter
+`/home/<user>/clipboard/` verfügbar.
+
+**Host:** Die Zwischenablage bleibt unverändert, solange kein Terminal im
+Vordergrund ist – Copy & Paste von Bildern in Slack, Preview usw. funktioniert
+normal.
+
+**Container:** Wechselst du mit einem kopierten Bild ins Terminal (Cursor,
+iTerm, Terminal …), wird der Container-Pfad in die Zwischenablage gelegt und
+kann per Cmd+V eingefügt werden. Verlässt du das Terminal wieder, wird nur
+das Bild wiederhergestellt.
 
 Im Container:
 
 ```bash
 cat ~/clipboard/.latest-container-path   # letzter Pfad
 ls ~/clipboard/latest.png                  # Symlink auf letztes Bild
+clip-path                                  # Pfad-Helfer (falls Cmd+V nicht greift)
 ```
 
 Anderen Host-Ordner setzen:
@@ -213,6 +222,10 @@ export AGENT_SANDBOX_CLIPBOARD_DIR=/pfad/zu/clipboard-images
 - Der Container wird mit `--rm` gestartet und nach `exit` automatisch entfernt.
 - Der Containername ist `agent-sandbox`.
 - Der Claude-Autoupdater ist deaktiviert (`CLAUDE_SKIP_AUTOUPDATER=1`).
+- Claude-Code-Credentials liegen isoliert unter `~/.agent-sandbox/home/.claude/`,
+  damit der Host-Daemon (`~/.claude/daemon`) die Container-Session nicht
+  invalidiert. Beim ersten Start werden vorhandene Credentials von
+  `~/.claude/.credentials.json` einmalig übernommen.
 - `HOME`, `HISTFILE` und die XDG-Verzeichnisse zeigen auf `/home/<user>`.
   Dadurch landen `.bash_history`, `.cache`, `.local`, `.npm` und
   Claude-Home-Dateien nicht mehr in `/workspace`, bleiben aber unter

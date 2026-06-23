@@ -173,6 +173,12 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     echo "Clipboard-Monitor aktiv: $CLIPBOARD_DIR → $AGENT_HOME/clipboard"
 fi
 
+cat > "$HOST_AGENT_HOME/.agent-sandbox-clipboard.sh" <<'EOF'
+clip-path() {
+    cat "$HOME/clipboard/.latest-container-path" 2>/dev/null || echo "$HOME/clipboard/latest.png"
+}
+EOF
+
 printf '%s\n' \
     'root:x:0:0:root:/root:/bin/bash' \
     "${HOST_USER}:x:${HOST_UID}:${HOST_GID}:${HOST_USER}:${AGENT_HOME}:/bin/bash" \
@@ -189,6 +195,7 @@ docker run -it \
     --entrypoint "" \
     --user "$HOST_UID:$HOST_GID" \
     -e CLAUDE_SKIP_AUTOUPDATER=1 \
+    -e CLAUDE_CONFIG_DIR="$AGENT_HOME/.claude" \
     -e CODEX_HOME="$AGENT_HOME/.codex" \
     -e GIT_CONFIG_GLOBAL="$AGENT_HOME/.gitconfig" \
     -e HISTFILE="$AGENT_HOME/.bash_history.$$" \
@@ -209,7 +216,7 @@ docker run -it \
     -v "$GROUP_FILE":/etc/group:ro \
     -v "$GITCONFIG":/tmp/host.gitconfig:ro \
     -v "$HOST_AGENT_HOME":"$AGENT_HOME" \
-    -v "$CLAUDE_DIR":"$AGENT_HOME/.claude" \
+    -v "$CLAUDE_DIR":"/host-claude:ro" \
     -v "$CODEX_MCP_DIR":"$AGENT_HOME/.codex" \
     -v "$CODEX_DIR":"/host-codex:ro" \
     -v "$AGENTS_DIR":"$AGENT_HOME/.agents" \
@@ -242,4 +249,10 @@ for f in auth.json hooks.json; do
   [ -f "/host-codex/$f" ] && [ ! -f "$HOME/.codex/$f" ] && cp "/host-codex/$f" "$HOME/.codex/$f"
 done
 [ -d /host-codex/skills ] && [ ! -e "$HOME/.codex/skills" ] && ln -sfn /host-codex/skills "$HOME/.codex/skills"
+mkdir -p "$HOME/.claude"
+for f in .credentials.json settings.json settings.local.json; do
+  [ -f "/host-claude/$f" ] && [ ! -f "$HOME/.claude/$f" ] && cp "/host-claude/$f" "$HOME/.claude/$f"
+done
+[ -d /host-claude/hooks ] && [ ! -e "$HOME/.claude/hooks" ] && cp -R /host-claude/hooks "$HOME/.claude/hooks"
+grep -qF agent-sandbox-clipboard.sh "$HOME/.bashrc" 2>/dev/null || printf "%s\n" "[ -f \"\$HOME/.agent-sandbox-clipboard.sh\" ] && . \"\$HOME/.agent-sandbox-clipboard.sh\"" >> "$HOME/.bashrc"
 exec bash -i'
