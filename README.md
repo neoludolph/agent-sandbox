@@ -78,17 +78,30 @@ Projekt erzeugte Dateien nicht root gehören. Beim Start werden temporäre
 `/etc/passwd`- und `/etc/group`-Dateien gemountet, damit diese UID im Container
 auch einen Namen hat.
 
-### Skript ins PATH legen
+### Skripte ins PATH legen
+
+Im Projektverzeichnis `agent-sandbox`:
 
 ```bash
+mkdir -p ~/.local/bin
 ln -s "$(pwd)/agent-sandbox.sh" ~/.local/bin/agent-sandbox
+ln -s "$(pwd)/clipboard-paste-path.sh" ~/.local/bin/clipboard-paste-path
 ```
+
+Stelle sicher, dass `~/.local/bin` in deiner Shell im `PATH` liegt (z. B. in
+`~/.zshrc`: `export PATH="$HOME/.local/bin:$PATH"`).
 
 Danach kann der Container aus jedem Projekt heraus gestartet werden:
 
 ```bash
 cd /dein/projekt
 agent-sandbox
+```
+
+Und der Clipboard-Pfad steht überall zur Verfügung:
+
+```bash
+clipboard-paste-path
 ```
 
 ### GitHub MCP
@@ -235,9 +248,11 @@ einfügen willst (z. B. per Tastenkürzel), statt `clip-path` im Container zu 
 1. Sandbox läuft, Bild wurde mit **Cmd+C** kopiert (siehe oben).
 2. **Auf dem Mac** (zweites Terminal oder Automator-Kurzbefehl):
    ```bash
-   ./clipboard-paste-path.sh
-   # oder, wenn im PATH: clipboard-paste-path
+   clipboard-paste-path
    ```
+   Einmalig Symlink anlegen (im Projektverzeichnis):
+   `ln -s "$(pwd)/clipboard-paste-path.sh" ~/.local/bin/clipboard-paste-path`
+   — siehe auch [Skripte ins PATH legen](#skripte-ins-path-legen).
 3. Das Skript gibt eine Zeile aus, z. B.:
    `/home/<user>/clipboard/clipboard-image-20260623_221200.png`
    Gleichzeitig liegt **dieser Text** in der macOS-Zwischenablage.
