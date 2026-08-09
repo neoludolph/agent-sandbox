@@ -34,11 +34,12 @@ AGENTS_DIR="$HOME/.agents"
 COPILOT_DIR="$HOME/.copilot"
 CURSOR_DIR="$HOME/.cursor"
 GEMINI_ANTIGRAVITY_CLI_DIR="$HOME/.gemini/antigravity-cli"
+GEMINI_ANTIGRAVITY_SKILLS_DIR="$HOME/.gemini/antigravity/skills"
 GEMINI_CONFIG_DIR="$HOME/.gemini/config"
 
 [ -f "$GITCONFIG" ] || { echo "Datei $GITCONFIG nicht vorhanden"; exit 1; }
 mkdir -p "$HOST_AGENT_HOME" "$CURSOR_MCP_DIR" "$CLAUDE_MCP_DIR" "$CODEX_MCP_DIR" "$CLIPBOARD_DIR" "$CLAUDE_DIR" "$CODEX_DIR" "$AGENTS_DIR" "$COPILOT_DIR" "$CURSOR_DIR" \
-    "$GEMINI_ANTIGRAVITY_CLI_DIR" "$GEMINI_CONFIG_DIR"
+    "$GEMINI_ANTIGRAVITY_CLI_DIR" "$GEMINI_ANTIGRAVITY_SKILLS_DIR" "$GEMINI_CONFIG_DIR"
 
 if [ ! -f "$CURSOR_MCP_FILE" ]; then
     cat > "$CURSOR_MCP_FILE" <<'EOF'
@@ -228,6 +229,7 @@ docker run -it \
     -v "$CURSOR_DIR":"$AGENT_HOME/.cursor" \
     -v "$CURSOR_MCP_FILE":"$AGENT_HOME/.cursor/mcp.json" \
     -v "$GEMINI_ANTIGRAVITY_CLI_DIR":"$AGENT_HOME/.gemini/antigravity-cli" \
+    -v "$GEMINI_ANTIGRAVITY_SKILLS_DIR":"$AGENT_HOME/.gemini/antigravity/skills" \
     -v "$GEMINI_CONFIG_DIR":"$AGENT_HOME/.gemini/config" \
     -v "$CLIPBOARD_DIR":"$AGENT_HOME/clipboard" \
     "${GEMINI_AUTH_MOUNTS[@]}" \

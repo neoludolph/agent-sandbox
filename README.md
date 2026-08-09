@@ -24,7 +24,8 @@ Containerisierte Entwicklungsumgebung mit Java, Maven, Node.js, Python und Agent
 
 Das persistente Container-Home `~/.agent-sandbox/home` und die
 Konfigurationsverzeichnisse `~/.claude`, `~/.codex`, `~/.agents`, `~/.copilot`,
-`~/.cursor`, `~/.gemini/antigravity-cli` und `~/.gemini/config` werden beim
+`~/.cursor`, `~/.gemini/antigravity-cli`, `~/.gemini/antigravity/skills` und
+`~/.gemini/config` werden beim
 Start automatisch angelegt, falls sie noch nicht existieren. Vorhandene Dateien
 unter `~/.gemini/` (`settings.json`, `oauth_creds.json`, `google_accounts.json`)
 werden bei Bedarf nach `/host-gemini` gemountet und beim Start nach
@@ -195,6 +196,7 @@ docker ps
 | `~/.agent-sandbox/claude/mcp-servers.json` | (gemergt in Container-Home) | Container-MCP für Claude Code |
 | `~/.agent-sandbox/home/.claude.json` | `/home/<user>/.claude.json` | Claude-Code-State inkl. gemergter MCP-Server |
 | `~/.gemini/antigravity-cli` | `/home/<user>/.gemini/antigravity-cli` | Antigravity-CLI-Einstellungen, Plugins, Keybindings |
+| `~/.gemini/antigravity/skills` | `/home/<user>/.gemini/antigravity/skills` | Antigravity-Skills |
 | `~/.gemini/config` | `/home/<user>/.gemini/config` | Antigravity-Projektkonfiguration |
 | `~/.gemini/settings.json` usw. | `/host-gemini/…` → Symlink | Optional: MCP, OAuth und Account-Dateien (falls vorhanden) |
 | `~/tools/clipboard-images` (oder `AGENT_SANDBOX_CLIPBOARD_DIR`) | `/home/<user>/clipboard` | Zwischenablage-Bilder vom macOS-Host (nur macOS) |
